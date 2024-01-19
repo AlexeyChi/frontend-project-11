@@ -22,10 +22,13 @@ jobs:
           cache: 'npm'
 
       - name: install
-        run: make ci
+        run: make install
 
       - name: build
         run: make build
 
       - name: test  
         run: make test
+
+      - name: lint
+        run: make lint
