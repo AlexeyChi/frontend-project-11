@@ -1,4 +1,6 @@
 import * as yup from 'yup';
+import i18next from 'i18next';
+import resources from './locales/index.js';
 import watcher from './view.js';
 
 const validate = (url, feeds) => {
@@ -6,11 +8,28 @@ const validate = (url, feeds) => {
     .string()
     .url('invalid URL')
     .notOneOf(feeds, 'not uniq URL');
-
-  return urlShema.validate(url);
+  return urlShema.validate(url, { abortEarly: false });
 };
 
 export default () => {
+  const defaultLenguage = 'ru';
+
+  const i18nInstance = i18next.createInstance();
+  i18nInstance.init({
+    lng: defaultLenguage,
+    debug: true,
+    resources,
+  }).then(() => {
+    yup.setLocale({
+      string: {
+        url: 'errors.invalidURL',
+      },
+      mixed: {
+        notOneOf: 'errors.notUniqURL',
+      },
+    });
+  }).catch((err) => console.log('something went wrong loading', err));
+
   const elements = {
     form: document.querySelector('form'),
     inputEl: document.querySelector('#url-input'),
@@ -27,7 +46,7 @@ export default () => {
     posts: [],
   };
 
-  const watchedState = watcher(elements, state);
+  const watchedState = watcher(elements, state, i18nInstance);
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -37,7 +56,6 @@ export default () => {
 
     validate(url, watchedState.feeds)
       .then((feed) => {
-        console.log(feed);
         watchedState.form.formStatus = 'sent';
         watchedState.form.errors = null;
         state.feeds.push(feed);
