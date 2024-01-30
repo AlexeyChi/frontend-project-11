@@ -54,17 +54,17 @@ const handleFeedsList = (state) => {
   const feedsUl = document.createElement('ul');
   feedsUl.classList.add('list-group', 'border-0', 'rounded-0');
 
-  const feedsList = state.feeds.map(({ title, description }) => {
+  const feedsList = state.feeds.map(({ feedTitle, feedDescription }) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
 
     const liTitle = document.createElement('h3');
     liTitle.classList.add('h6', 'm-0');
-    liTitle.textContent = title;
+    liTitle.textContent = feedTitle;
 
     const liDescription = document.createElement('p');
     liDescription.classList.add('m-0', 'small', 'text-black-50');
-    liDescription.textContent = description;
+    liDescription.textContent = feedDescription;
 
     li.append(liTitle, liDescription);
     return li;
@@ -147,7 +147,7 @@ const renderPostsContainer = (elements, state, i18nInstance) => {
 };
 
 export default (elements, state, i18nInstance) => {
-  const mainWatcher = onChange(state, (path, value) => {
+  const mainWatcher = onChange(state, (path) => {
     switch (path) {
       case 'feeds': {
         renderFeedsContainer(elements, state, i18nInstance);

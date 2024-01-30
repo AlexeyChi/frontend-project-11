@@ -19,26 +19,26 @@ const routes = {
 };
 
 const makeParsedResponse = (data) => {
-  return axios.get(routes.fetchUrl(data))
+  const fetchResponse = axios.get(routes.fetchUrl(data))
     .then((response) => urlParser(response.data.contents))
     .catch((e) => {
       if (e.message === 'Network error') {
-        throw new Error(`networkError`)
+        throw new Error('networkError');
       }
       throw e;
     });
+  return fetchResponse;
 };
 
 const makeNewData = (data, url) => {
   const { feed, posts } = data;
-  const { title, description } = feed;
-  const newFeed = { id: uniqId, link: url, ...{ title, description } };
+  const { feedTitle, feedDescription } = feed;
+  const newFeed = { id: uniqId, link: url, ...{ feedTitle, feedDescription } };
   uniqId += 1;
   const newPosts = [...posts].map((post) => {
-    post.id = uniqId;
+    const uniqPost = { id: uniqId, feedId: newFeed.id, ...post };
     uniqId += 1;
-    post.feedId = newFeed.id;
-    return post;
+    return uniqPost;
   });
   return { newFeed, newPosts };
 };
@@ -90,21 +90,21 @@ export default () => {
     const uniqFeeds = state.feeds.map(({ link }) => link);
 
     validate(url, uniqFeeds)
-      .then((url) => {
+      .then((validUrl) => {
         watchedState.form.formStatus = 'sent';
-        return makeParsedResponse(url);
+        return makeParsedResponse(validUrl);
       })
       .then((data) => {
         watchedState.form.errors = null;
         const { newFeed, newPosts } = makeNewData(data, url);
         watchedState.feeds.push(newFeed);
         watchedState.posts.push(...newPosts);
-        console.log(state)
+        // console.log(state)
       })
       .catch((err) => {
         watchedState.form.formStatus = 'error';
         watchedState.form.errors = err.message;
-        console.log(state)
+        // console.log(state)
       });
   });
 };
