@@ -15,7 +15,7 @@ const validate = (url, feeds) => {
 };
 
 const routes = {
-  fetchUrl: (url) => `https://allorigins.hexlet.app/get?url=${encodeURIComponent(`${url}`)}`,
+  fetchUrl: (url) => `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(`${url}`)}`,
 };
 
 const makeParsedResponse = (data) => {
@@ -30,37 +30,49 @@ const makeParsedResponse = (data) => {
   return fetchResponse;
 };
 
-const makeNewData = (data, url) => {
-  const { feed, posts } = data;
-  const { feedTitle, feedDescription } = feed;
-  const newFeed = { id: uniqId, link: url, ...{ feedTitle, feedDescription } };
+const makeNewFeed = (data, url) => {
+  const { feed } = data;
+  const updatedFeed = { id: uniqId, link: url, ...feed };
   uniqId += 1;
-  const newPosts = [...posts].map((post) => {
-    const uniqPost = { id: uniqId, feedId: newFeed.id, ...post };
+  return updatedFeed;
+};
+
+const makeNewPosts = (feed, data) => {
+  const { posts } = data;
+  return [...posts].map((post) => {
+    const updatedPost = { id: uniqId, feedId: feed.id, ...post };
     uniqId += 1;
-    return uniqPost;
+    return updatedPost;
   });
-  return { newFeed, newPosts };
+};
+
+const addNewPosts = (watchedState) => {
+  const hendleNewPosts = () => {
+    const usedUrls = watchedState.feeds.map(({ link }) => link);
+    setTimeout(() => {
+      Promise.allSettled(usedUrls.map((url) => makeParsedResponse(url)))
+        .then((results) => results.forEach((promise) => {
+          const oldPosts = watchedState.posts.map(({ title }) => title);
+          const addedPosts = promise.value.posts.filter(({ title }) => !oldPosts.includes(title));
+          watchedState.posts.unshift(...addedPosts);
+        }))
+        .then(() => hendleNewPosts());
+    }, 5000);
+  };
+  hendleNewPosts();
 };
 
 export default () => {
   const defaultLenguage = 'ru';
 
-  const i18nInstance = i18next.createInstance();
-  i18nInstance.init({
-    lng: defaultLenguage,
-    debug: true,
-    resources,
-  }).then(() => {
-    yup.setLocale({
-      string: {
-        url: 'errors.invalidURL',
-      },
-      mixed: {
-        notOneOf: 'errors.notUniqURL',
-      },
-    });
-  }).catch((err) => console.log('something went wrong loading', err));
+  yup.setLocale({
+    string: {
+      url: 'errors.invalidURL',
+    },
+    mixed: {
+      notOneOf: 'errors.notUniqURL',
+    },
+  });
 
   const elements = {
     form: document.querySelector('form'),
@@ -80,31 +92,41 @@ export default () => {
     posts: [],
   };
 
-  const watchedState = watcher(elements, state, i18nInstance);
+  const i18nInstance = i18next.createInstance();
+  i18nInstance.init({
+    lng: defaultLenguage,
+    debug: false,
+    resources,
+  }).then(() => {
+    const watchedState = watcher(elements, state, i18nInstance);
+    addNewPosts(watchedState);
 
-  elements.form.addEventListener('submit', (e) => {
-    e.preventDefault();
+    elements.form.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    const newData = new FormData(e.target);
-    const url = newData.get('url');
-    const uniqFeeds = state.feeds.map(({ link }) => link);
+      const newData = new FormData(e.target);
+      const url = newData.get('url');
+      const uniqFeeds = state.feeds.map(({ link }) => link);
 
-    validate(url, uniqFeeds)
-      .then((validUrl) => {
-        watchedState.form.formStatus = 'sent';
-        return makeParsedResponse(validUrl);
-      })
-      .then((data) => {
-        watchedState.form.errors = null;
-        const { newFeed, newPosts } = makeNewData(data, url);
-        watchedState.feeds.push(newFeed);
-        watchedState.posts.push(...newPosts);
-        // console.log(state)
-      })
-      .catch((err) => {
-        watchedState.form.formStatus = 'error';
-        watchedState.form.errors = err.message;
-        // console.log(state)
-      });
-  });
+      validate(url, uniqFeeds)
+        .then((validUrl) => {
+          watchedState.form.formStatus = 'sent';
+          return makeParsedResponse(validUrl);
+        })
+        .then((data) => {
+          watchedState.form.errors = null;
+          const newFeed = makeNewFeed(data, url);
+          const newPosts = makeNewPosts(newFeed, data);
+          watchedState.feeds.push(newFeed);
+          watchedState.posts.push(...newPosts);
+          // console.log(state)
+        })
+        .catch((err) => {
+          watchedState.form.formStatus = 'error';
+          watchedState.form.errors = err.message;
+          // console.log(state)
+        });
+    });
+  })
+    .catch((err) => console.log('something went wrong loading', err));
 };
