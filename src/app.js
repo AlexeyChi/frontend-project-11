@@ -51,9 +51,18 @@ const addNewPosts = (watchedState) => {
     const usedUrls = watchedState.feeds.map(({ link }) => link);
     setTimeout(() => {
       Promise.allSettled(usedUrls.map((url) => makeParsedResponse(url)))
-        .then((results) => results.forEach((promise) => {
+        .then((results) => results.forEach((promise, index) => {
+          const { posts } = promise.value;
+          const feed = watchedState.feeds[index];
+
           const oldPosts = watchedState.posts.map(({ title }) => title);
-          const addedPosts = promise.value.posts.filter(({ title }) => !oldPosts.includes(title));
+          const addedPosts = posts
+            .filter(({ title }) => !oldPosts.includes(title))
+            .map((post) => {
+              const addedPost = { id: uniqId, feedId: feed.id, ...post };
+              uniqId += 1;
+              return addedPost;
+            });
           watchedState.posts.unshift(...addedPosts);
         }))
         .then(() => hendleNewPosts());
@@ -81,12 +90,17 @@ export default () => {
     submitBtn: document.querySelector('button[type=submit]'),
     feedsContainer: document.querySelector('div.feeds'),
     postsContainer: document.querySelector('div.posts'),
+    modal: document.querySelector('.modal'),
   };
 
   const state = {
     form: {
       formStatus: 'filling',
       errors: '',
+    },
+    uiState: {
+      touchedLinkId: '',
+      readLinks: new Set(),
     },
     feeds: [],
     posts: [],
@@ -127,6 +141,19 @@ export default () => {
           // console.log(state)
         });
     });
+
+    elements.modal.addEventListener('shown.bs.modal', (e) => {
+      const targetPost = e.relatedTarget.dataset;
+      watchedState.uiState.touchedLinkId = +targetPost.id;
+      watchedState.uiState.readLinks.add(+targetPost.id);
+      console.log(state);
+    });
+
+    // const links = elements.postsContainer.querySelectorAll('a');
+    // links.forEach((link) => link.addEventListener('click', () => {
+    //   watchedState.uiState.readLinks.add(link.dataset.id);
+    //   console.log(state);
+    // }));
   })
     .catch((err) => console.log('something went wrong loading', err));
 };

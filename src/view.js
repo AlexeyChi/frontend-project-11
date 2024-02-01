@@ -13,35 +13,31 @@ const handleProcess = (elements, state) => {
 const renderFeedback = (elements, state, i18nInstance) => {
   const { feedbackEl } = elements;
   feedbackEl.innerHTML = '';
+  feedbackEl.classList = '';
 
   switch (state.form.errors) {
     case null: {
       feedbackEl.textContent = i18nInstance.t('errors.null');
       feedbackEl.classList.add('text-success');
-      feedbackEl.classList.remove('text-danger');
       break;
     }
     case 'not uniq URL': {
       feedbackEl.textContent = i18nInstance.t('errors.notUniqURL');
-      feedbackEl.classList.remove('text-success');
       feedbackEl.classList.add('text-danger');
       break;
     }
     case 'invalid URL': {
       feedbackEl.textContent = i18nInstance.t('errors.invalidURL');
-      feedbackEl.classList.remove('text-success');
       feedbackEl.classList.add('text-danger');
       break;
     }
     case 'notContainValidRss': {
       feedbackEl.textContent = i18nInstance.t('errors.notContainValidRss');
-      feedbackEl.classList.remove('text-success');
       feedbackEl.classList.add('text-danger');
       break;
     }
     case 'Network error': {
       feedbackEl.textContent = i18nInstance.t('errors.networkError');
-      feedbackEl.classList.remove('text-success');
       feedbackEl.classList.add('text-danger');
       break;
     }
@@ -95,6 +91,11 @@ const renderFeedsContainer = (elements, state, i18nInstance) => {
   feedsContainer.append(feedsWrapper);
 };
 
+const postsClassLists = {
+  isTouched: ['fw-normal', 'link-secondary'],
+  isNotTouched: ['fw-bold'],
+};
+
 const handlePostsList = (state, i18nInstance) => {
   const postsUl = document.createElement('ul');
   postsUl.classList.add('list-group', 'border-0', 'rounded-0');
@@ -104,11 +105,20 @@ const handlePostsList = (state, i18nInstance) => {
     postLi.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
     const postLink = document.createElement('a');
-    postLink.classList.add('fw-bold');
+    const classListName = state.uiState.readLinks.has(id)
+      ? postsClassLists.isTouched
+      : postsClassLists.isNotTouched;
+    postLink.classList.add(...classListName);
     postLink.setAttribute('href', link);
+    postLink.setAttribute('target', '_blank');
     postLink.setAttribute('rel', 'noopener noreferrer');
     postLink.dataset.id = id;
     postLink.textContent = title;
+    postLink.addEventListener('click', () => {
+      postLink.classList = '';
+      postLink.classList.add(...postsClassLists.isTouched);
+      state.uiState.readLinks.add(id);
+    });
 
     const postBtn = document.createElement('button');
     postBtn.setAttribute('type', 'button');
@@ -146,8 +156,35 @@ const renderPostsContainer = (elements, state, i18nInstance) => {
   postsContainer.append(postsWrapper);
 };
 
+const renderModal = (elements, state) => {
+  const { modal } = elements;
+  const { title, description, link } = state.posts
+    .find((post) => post.id === state.uiState.touchedLinkId);
+
+  const modalHeader = modal.querySelector('.modal-title');
+  const modalBody = modal.querySelector('.modal-body');
+  const readMoreBtn = modal.querySelector('.modal-footer a');
+  readMoreBtn.setAttribute('href', link);
+
+  modalHeader.textContent = title;
+  modalBody.textContent = description.replace(/(<.*?>)/g, '');
+};
+
+const renderLinks = (elements, value, prevValue) => {
+  const { postsContainer } = elements;
+
+  value.forEach((key) => {
+    if (prevValue.has(key)) {
+      return;
+    }
+    const touchedLink = postsContainer.querySelector(`a[data-id='${key}']`);
+    touchedLink.classList = '';
+    touchedLink.classList.add(...postsClassLists.isTouched);
+  });
+};
+
 export default (elements, state, i18nInstance) => {
-  const mainWatcher = onChange(state, (path) => {
+  const mainWatcher = onChange(state, (path, value, previousValue) => {
     switch (path) {
       case 'feeds': {
         renderFeedsContainer(elements, state, i18nInstance);
@@ -158,11 +195,19 @@ export default (elements, state, i18nInstance) => {
         break;
       }
       case 'form.formStatus': {
-        handleProcess(elements, state); // в зависимости от состояния менять цвет рамки инпута
+        handleProcess(elements, state);
         break;
       }
       case 'form.errors': {
-        renderFeedback(elements, state, i18nInstance); // рендер ошибки в контекст elements.feedback
+        renderFeedback(elements, state, i18nInstance);
+        break;
+      }
+      case 'uiState.touchedLinkId': {
+        renderModal(elements, state);
+        break;
+      }
+      case 'uiState.readLinks': {
+        renderLinks(elements, value, previousValue);
         break;
       }
       default:
