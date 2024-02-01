@@ -47,28 +47,26 @@ const makeNewPosts = (feed, data) => {
 };
 
 const addNewPosts = (watchedState) => {
-  const hendleNewPosts = () => {
-    const usedUrls = watchedState.feeds.map(({ link }) => link);
-    setTimeout(() => {
-      Promise.allSettled(usedUrls.map((url) => makeParsedResponse(url)))
-        .then((results) => results.forEach((promise, index) => {
-          const { posts } = promise.value;
-          const feed = watchedState.feeds[index];
+  const usedUrls = watchedState.feeds.map(({ link }) => link);
 
-          const oldPosts = watchedState.posts.map(({ title }) => title);
-          const addedPosts = posts
-            .filter(({ title }) => !oldPosts.includes(title))
-            .map((post) => {
-              const addedPost = { id: uniqId, feedId: feed.id, ...post };
-              uniqId += 1;
-              return addedPost;
-            });
-          watchedState.posts.unshift(...addedPosts);
-        }))
-        .then(() => hendleNewPosts());
-    }, 5000);
-  };
-  hendleNewPosts();
+  const promises = usedUrls.map((url, index) => makeParsedResponse(url)
+    .then((data) => {
+      const { posts } = data;
+      const oldPosts = watchedState.posts.map(({ title }) => title);
+
+      const addedPosts = posts.filter(({ title }) => !oldPosts.includes(title))
+        .map((post) => {
+          const { id } = watchedState.feeds[index];
+          const addedPost = { id: uniqId, feedId: id, ...post };
+          uniqId += 1;
+          return addedPost;
+        });
+
+      watchedState.posts.unshift(...addedPosts);
+    })
+    .catch((err) => watchedState.form.errors.push(err)));
+
+  Promise.allSettled(promises).finally(() => setTimeout(() => addNewPosts(watchedState), 5000));
 };
 
 export default () => {
@@ -111,40 +109,41 @@ export default () => {
     lng: defaultLenguage,
     debug: false,
     resources,
-  }).then(() => {
-    const watchedState = render(elements, state, i18nInstance);
-    addNewPosts(watchedState);
+  });
 
-    elements.form.addEventListener('submit', (e) => {
-      e.preventDefault();
+  const watchedState = render(elements, state, i18nInstance);
+  elements.form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newData = new FormData(e.target);
+    const url = newData.get('url');
+    const uniqFeeds = state.feeds.map(({ link }) => link);
+    validate(url, uniqFeeds)
+      .then((validUrl) => {
+        watchedState.form.formStatus = 'sent';
+        return makeParsedResponse(validUrl);
+      })
+      .then((data) => {
+        watchedState.form.errors = null;
+        const newFeed = makeNewFeed(data, url);
+        const newPosts = makeNewPosts(newFeed, data);
+        watchedState.feeds.push(newFeed);
+        watchedState.posts.push(...newPosts);
+      })
+      .catch((err) => {
+        watchedState.form.formStatus = 'error';
+        watchedState.form.errors = err.message;
+      });
+  });
 
-      const newData = new FormData(e.target);
-      const url = newData.get('url');
-      const uniqFeeds = state.feeds.map(({ link }) => link);
+  elements.postsContainer.addEventListener('click', (e) => {
+    const tagName = e.target.tagName.toLowerCase();
+    const { id } = e.target.dataset;
 
-      validate(url, uniqFeeds)
-        .then((validUrl) => {
-          watchedState.form.formStatus = 'sent';
-          return makeParsedResponse(validUrl);
-        })
-        .then((data) => {
-          watchedState.form.errors = null;
-          const newFeed = makeNewFeed(data, url);
-          const newPosts = makeNewPosts(newFeed, data);
-          watchedState.feeds.push(newFeed);
-          watchedState.posts.push(...newPosts);
-        })
-        .catch((err) => {
-          watchedState.form.formStatus = 'error';
-          watchedState.form.errors = err.message;
-        });
-    });
+    if (tagName === 'a' || tagName === 'button') {
+      watchedState.uiState.touchedLinkId = +id;
+      watchedState.uiState.readLinks.add(+id);
+    }
+  });
 
-    elements.modal.addEventListener('shown.bs.modal', (e) => {
-      const targetPost = e.relatedTarget.dataset;
-      watchedState.uiState.touchedLinkId = +targetPost.id;
-      watchedState.uiState.readLinks.add(+targetPost.id);
-    });
-  })
-    .catch((err) => console.log('something went wrong loading', err));
+  setTimeout(() => addNewPosts(watchedState), 5000);
 };

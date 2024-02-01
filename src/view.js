@@ -115,11 +115,6 @@ const handlePostsList = (state, i18nInstance) => {
     postLink.setAttribute('rel', 'noopener noreferrer');
     postLink.dataset.id = id;
     postLink.textContent = title;
-    postLink.addEventListener('click', () => {
-      postLink.classList = '';
-      postLink.classList.add(...postsClassLists.isTouched);
-      state.uiState.readLinks.add(id);
-    });
 
     const postBtn = document.createElement('button');
     postBtn.setAttribute('type', 'button');
