@@ -2,7 +2,7 @@ import * as yup from 'yup';
 import i18next from 'i18next';
 import axios from 'axios';
 import resources from './locales/index.js';
-import watcher from './view.js';
+import render from './view.js';
 import urlParser from './parsers/parser.js';
 
 let uniqId = 1;
@@ -112,7 +112,7 @@ export default () => {
     debug: false,
     resources,
   }).then(() => {
-    const watchedState = watcher(elements, state, i18nInstance);
+    const watchedState = render(elements, state, i18nInstance);
     addNewPosts(watchedState);
 
     elements.form.addEventListener('submit', (e) => {
@@ -133,12 +133,10 @@ export default () => {
           const newPosts = makeNewPosts(newFeed, data);
           watchedState.feeds.push(newFeed);
           watchedState.posts.push(...newPosts);
-          // console.log(state)
         })
         .catch((err) => {
           watchedState.form.formStatus = 'error';
           watchedState.form.errors = err.message;
-          // console.log(state)
         });
     });
 
@@ -146,14 +144,7 @@ export default () => {
       const targetPost = e.relatedTarget.dataset;
       watchedState.uiState.touchedLinkId = +targetPost.id;
       watchedState.uiState.readLinks.add(+targetPost.id);
-      console.log(state);
     });
-
-    // const links = elements.postsContainer.querySelectorAll('a');
-    // links.forEach((link) => link.addEventListener('click', () => {
-    //   watchedState.uiState.readLinks.add(link.dataset.id);
-    //   console.log(state);
-    // }));
   })
     .catch((err) => console.log('something went wrong loading', err));
 };

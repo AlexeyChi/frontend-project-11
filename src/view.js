@@ -1,12 +1,13 @@
 import onChange from 'on-change';
 
 const handleProcess = (elements, state) => {
+  const { form, inputEl } = elements;
   if (state.form.formStatus !== 'error') {
-    elements.inputEl.classList.remove('is-invalid');
-    elements.inputEl.focus();
-    elements.form.reset();
+    inputEl.classList.remove('is-invalid');
+    inputEl.focus();
+    form.reset();
   } else {
-    elements.inputEl.classList.add('is-invalid');
+    inputEl.classList.add('is-invalid');
   }
 };
 
@@ -183,36 +184,33 @@ const renderLinks = (elements, value, prevValue) => {
   });
 };
 
-export default (elements, state, i18nInstance) => {
-  const mainWatcher = onChange(state, (path, value, previousValue) => {
-    switch (path) {
-      case 'feeds': {
-        renderFeedsContainer(elements, state, i18nInstance);
-        break;
-      }
-      case 'posts': {
-        renderPostsContainer(elements, state, i18nInstance);
-        break;
-      }
-      case 'form.formStatus': {
-        handleProcess(elements, state);
-        break;
-      }
-      case 'form.errors': {
-        renderFeedback(elements, state, i18nInstance);
-        break;
-      }
-      case 'uiState.touchedLinkId': {
-        renderModal(elements, state);
-        break;
-      }
-      case 'uiState.readLinks': {
-        renderLinks(elements, value, previousValue);
-        break;
-      }
-      default:
-        break;
+export default (elements, state, i18nInstance) => onChange(state, (path, value, previousValue) => {
+  switch (path) {
+    case 'feeds': {
+      renderFeedsContainer(elements, state, i18nInstance);
+      break;
     }
-  });
-  return mainWatcher;
-};
+    case 'posts': {
+      renderPostsContainer(elements, state, i18nInstance);
+      break;
+    }
+    case 'form.formStatus': {
+      handleProcess(elements, state);
+      break;
+    }
+    case 'form.errors': {
+      renderFeedback(elements, state, i18nInstance);
+      break;
+    }
+    case 'uiState.touchedLinkId': {
+      renderModal(elements, state);
+      break;
+    }
+    case 'uiState.readLinks': {
+      renderLinks(elements, value, previousValue);
+      break;
+    }
+    default:
+      break;
+  }
+});
