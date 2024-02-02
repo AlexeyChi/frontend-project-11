@@ -1,8 +1,8 @@
 import onChange from 'on-change';
 
-const handleProcess = (elements, state) => {
+const handleProcess = (elements, initialState) => {
   const { inputEl } = elements;
-  if (state.form.formStatus !== 'error') {
+  if (initialState.form.formStatus !== 'error') {
     inputEl.classList.remove('is-invalid');
     inputEl.focus();
     inputEl.value = '';
@@ -11,12 +11,12 @@ const handleProcess = (elements, state) => {
   }
 };
 
-const renderFeedback = (elements, state, i18nInstance) => {
+const renderFeedback = (elements, initialState, i18nInstance) => {
   const { feedbackEl } = elements;
   feedbackEl.innerHTML = '';
   feedbackEl.classList.remove('text-success');
 
-  switch (state.form.errors) {
+  switch (initialState.form.errors) {
     case null: {
       feedbackEl.textContent = i18nInstance.t('errors.null');
       feedbackEl.classList.add('text-success');
@@ -53,11 +53,11 @@ const renderFeedback = (elements, state, i18nInstance) => {
   }
 };
 
-const handleFeedsList = (state) => {
+const handleFeedsList = (initialState) => {
   const feedsUl = document.createElement('ul');
   feedsUl.classList.add('list-group', 'border-0', 'rounded-0');
 
-  const feedsList = state.feeds.map(({ feedTitle, feedDescription }) => {
+  const feedsList = initialState.feeds.map(({ feedTitle, feedDescription }) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
 
@@ -77,7 +77,7 @@ const handleFeedsList = (state) => {
   return feedsUl;
 };
 
-const renderFeedsContainer = (elements, state, i18nInstance) => {
+const renderFeedsContainer = (elements, initialState, i18nInstance) => {
   const { feedsContainer } = elements;
   feedsContainer.innerHTML = '';
 
@@ -92,7 +92,7 @@ const renderFeedsContainer = (elements, state, i18nInstance) => {
   feedsHeader.textContent = i18nInstance.t('feeds');
   feedsHeaderContainer.append(feedsHeader);
 
-  const feedsContainerBody = handleFeedsList(state);
+  const feedsContainerBody = handleFeedsList(initialState);
 
   feedsWrapper.append(feedsHeaderContainer, feedsContainerBody);
   feedsContainer.append(feedsWrapper);
@@ -103,16 +103,16 @@ const postsClassLists = {
   isNotTouched: ['fw-bold'],
 };
 
-const handlePostsList = (state, i18nInstance) => {
+const handlePostsList = (initialState, i18nInstance) => {
   const postsUl = document.createElement('ul');
   postsUl.classList.add('list-group', 'border-0', 'rounded-0');
 
-  const postsList = state.posts.map(({ id, title, link }) => {
+  const postsList = initialState.posts.map(({ id, title, link }) => {
     const postLi = document.createElement('li');
     postLi.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
     const postLink = document.createElement('a');
-    const classListName = state.uiState.readLinks.has(id)
+    const classListName = initialState.uiState.readLinks.has(id)
       ? postsClassLists.isTouched
       : postsClassLists.isNotTouched;
     postLink.classList.add(...classListName);
@@ -137,7 +137,7 @@ const handlePostsList = (state, i18nInstance) => {
   return postsUl;
 };
 
-const renderPostsContainer = (elements, state, i18nInstance) => {
+const renderPostsContainer = (elements, initialState, i18nInstance) => {
   const { postsContainer } = elements;
   postsContainer.innerHTML = '';
 
@@ -152,16 +152,16 @@ const renderPostsContainer = (elements, state, i18nInstance) => {
   postsHeader.textContent = i18nInstance.t('posts');
   postsHeaderContainer.append(postsHeader);
 
-  const postsContainerBody = handlePostsList(state, i18nInstance);
+  const postsContainerBody = handlePostsList(initialState, i18nInstance);
 
   postsWrapper.append(postsHeaderContainer, postsContainerBody);
   postsContainer.append(postsWrapper);
 };
 
-const renderModal = (elements, state) => {
+const renderModal = (elements, initialState) => {
   const { modal } = elements;
-  const { title, description, link } = state.posts
-    .find((post) => post.id === state.uiState.touchedLinkId);
+  const { title, description, link } = initialState.posts
+    .find((post) => post.id === initialState.uiState.touchedLinkId);
 
   const modalHeader = modal.querySelector('.modal-title');
   const modalBody = modal.querySelector('.modal-body');
@@ -185,26 +185,27 @@ const renderLinks = (elements, value, prevValue) => {
   });
 };
 
-export default (elements, state, i18nInstance) => onChange(state, (path, value, previousValue) => {
+// eslint-disable-next-line max-len
+export default (elements, initialState, i18nInstance) => onChange(initialState, (path, value, previousValue) => {
   switch (path) {
     case 'feeds': {
-      renderFeedsContainer(elements, state, i18nInstance);
+      renderFeedsContainer(elements, initialState, i18nInstance);
       break;
     }
     case 'posts': {
-      renderPostsContainer(elements, state, i18nInstance);
+      renderPostsContainer(elements, initialState, i18nInstance);
       break;
     }
     case 'form.formStatus': {
-      handleProcess(elements, state);
+      handleProcess(elements, initialState);
       break;
     }
     case 'form.errors': {
-      renderFeedback(elements, state, i18nInstance);
+      renderFeedback(elements, initialState, i18nInstance);
       break;
     }
     case 'uiState.touchedLinkId': {
-      renderModal(elements, state);
+      renderModal(elements, initialState);
       break;
     }
     case 'uiState.readLinks': {

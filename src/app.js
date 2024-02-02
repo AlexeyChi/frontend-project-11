@@ -45,27 +45,27 @@ const makeNewPosts = (feed, data) => {
   });
 };
 
-const addNewPosts = (watchedState) => {
-  const usedUrls = watchedState.feeds.map(({ link }) => link);
+const addNewPosts = (state) => {
+  const usedUrls = state.feeds.map(({ link }) => link);
 
   const promises = usedUrls.map((url, index) => makeParsedResponse(url)
     .then((data) => {
       const { posts } = data;
-      const oldPosts = watchedState.posts.map(({ title }) => title);
+      const oldPosts = state.posts.map(({ title }) => title);
 
       const addedPosts = posts.filter(({ title }) => !oldPosts.includes(title))
         .map((post) => {
-          const { id } = watchedState.feeds[index];
+          const { id } = state.feeds[index];
           const addedPost = { id: uniqId, feedId: id, ...post };
           uniqId += 1;
           return addedPost;
         });
 
-      watchedState.posts.unshift(...addedPosts);
+      state.posts.unshift(...addedPosts);
     })
-    .catch((err) => watchedState.form.errors.push(err)));
+    .catch((err) => state.form.errors.push(err)));
 
-  Promise.allSettled(promises).finally(() => setTimeout(() => addNewPosts(watchedState), 5000));
+  Promise.allSettled(promises).finally(() => setTimeout(() => addNewPosts(state), 5000));
 };
 
 export default () => {
@@ -91,7 +91,7 @@ export default () => {
     modal: document.querySelector('.modal'),
   };
 
-  const state = {
+  const initialState = {
     form: {
       formStatus: 'filling',
       errors: false,
@@ -111,27 +111,28 @@ export default () => {
     resources,
   });
 
-  const watchedState = render(elements, state, i18nInstance);
+  const state = render(elements, initialState, i18nInstance);
+
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
     const newData = new FormData(e.target);
     const url = newData.get('url');
-    const uniqFeeds = state.feeds.map(({ link }) => link);
+    const uniqFeeds = initialState.feeds.map(({ link }) => link);
     validate(url, uniqFeeds)
       .then((validUrl) => {
-        watchedState.form.formStatus = 'sent';
+        state.form.formStatus = 'sent';
         return makeParsedResponse(validUrl);
       })
       .then((data) => {
-        watchedState.form.errors = null;
+        state.form.errors = null;
         const newFeed = makeNewFeed(data, url);
         const newPosts = makeNewPosts(newFeed, data);
-        watchedState.feeds.push(newFeed);
-        watchedState.posts.push(...newPosts);
+        state.feeds.push(newFeed);
+        state.posts.push(...newPosts);
       })
       .catch((err) => {
-        watchedState.form.formStatus = 'error';
-        watchedState.form.errors = err.message;
+        state.form.formStatus = 'error';
+        state.form.errors = err.message;
       });
   });
 
@@ -140,10 +141,10 @@ export default () => {
     const { id } = e.target.dataset;
 
     if (tagName === 'a' || tagName === 'button') {
-      watchedState.uiState.touchedLinkId = +id;
-      watchedState.uiState.readLinks.add(+id);
+      state.uiState.touchedLinkId = +id;
+      state.uiState.readLinks.add(+id);
     }
   });
 
-  setTimeout(() => addNewPosts(watchedState), 5000);
+  setTimeout(() => addNewPosts(state), 5000);
 };
