@@ -2,7 +2,7 @@ import * as yup from 'yup';
 import i18next from 'i18next';
 import axios from 'axios';
 import resources from './locales/index.js';
-import render from './view.js';
+import watcher from './view.js';
 import urlParser from './parsers/parser.js';
 
 let uniqId = 1;
@@ -111,7 +111,7 @@ export default () => {
     resources,
   });
 
-  const state = render(elements, initialState, i18nInstance);
+  const state = watcher(elements, initialState, i18nInstance);
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
