@@ -43,7 +43,7 @@ const renderFeedback = (elements, state, i18nInstance) => {
       feedbackEl.classList.add('text-danger');
       break;
     }
-    case 'Network error': {
+    case 'networkError': {
       feedbackEl.textContent = i18nInstance.t('errors.networkError');
       feedbackEl.classList.add('text-danger');
       break;
