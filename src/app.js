@@ -23,10 +23,7 @@ const makeParsedResponse = (data) => {
   const fetchResponse = axios.get(routes.fetchUrl(data))
     .then((response) => urlParser(response.data.contents))
     .catch((e) => {
-      if (axios.isAxiosError(e)) {
-        throw new Error('networkError');
-      }
-      throw e;
+      throw axios.isAxiosError(e) ? 'networkError' : e;
     });
   return fetchResponse;
 };
