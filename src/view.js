@@ -14,12 +14,13 @@ const handleProcess = (elements, state) => {
 const renderFeedback = (elements, state, i18nInstance) => {
   const { feedbackEl } = elements;
   feedbackEl.innerHTML = '';
-  feedbackEl.classList = '';
+  feedbackEl.classList.remove('text-success');
 
   switch (state.form.errors) {
     case null: {
       feedbackEl.textContent = i18nInstance.t('errors.null');
       feedbackEl.classList.add('text-success');
+      feedbackEl.classList.remove('text-danger');
       break;
     }
     case 'not uniq URL': {
@@ -29,6 +30,11 @@ const renderFeedback = (elements, state, i18nInstance) => {
     }
     case 'invalid URL': {
       feedbackEl.textContent = i18nInstance.t('errors.invalidURL');
+      feedbackEl.classList.add('text-danger');
+      break;
+    }
+    case 'notEmpty': {
+      feedbackEl.textContent = i18nInstance.t('errors.notEmpty');
       feedbackEl.classList.add('text-danger');
       break;
     }

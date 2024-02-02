@@ -79,7 +79,7 @@ export default () => {
     },
     mixed: {
       notOneOf: 'errors.notUniqURL',
-      required: 'errors.notEmpty',
+      required: 'notEmpty',
     },
   });
 
