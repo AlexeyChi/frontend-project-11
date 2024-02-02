@@ -1,11 +1,11 @@
 import onChange from 'on-change';
 
 const handleProcess = (elements, state) => {
-  const { form, inputEl } = elements;
+  const { inputEl } = elements;
   if (state.form.formStatus !== 'error') {
     inputEl.classList.remove('is-invalid');
     inputEl.focus();
-    form.reset();
+    inputEl.value = '';
   } else {
     inputEl.classList.add('is-invalid');
   }

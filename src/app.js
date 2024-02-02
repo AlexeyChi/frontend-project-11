@@ -9,6 +9,7 @@ let uniqId = 1;
 const validate = (url, feeds) => {
   const urlShema = yup
     .string()
+    .required()
     .url('invalid URL')
     .notOneOf(feeds, 'not uniq URL');
   return urlShema.validate(url, { abortEarly: false });
@@ -78,6 +79,7 @@ export default () => {
     },
     mixed: {
       notOneOf: 'errors.notUniqURL',
+      required: 'errors.notEmpty',
     },
   });
 
@@ -94,7 +96,7 @@ export default () => {
   const state = {
     form: {
       formStatus: 'filling',
-      errors: '',
+      errors: false,
     },
     uiState: {
       touchedLinkId: '',
