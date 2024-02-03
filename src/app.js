@@ -46,6 +46,7 @@ const makeNewPosts = (feed, data) => {
 };
 
 const addNewPosts = (state) => {
+  const { form } = state;
   const usedUrls = state.feeds.map(({ link }) => link);
 
   const promises = usedUrls.map((url, index) => makeParsedResponse(url)
@@ -63,7 +64,9 @@ const addNewPosts = (state) => {
 
       state.posts.unshift(...addedPosts);
     })
-    .catch((err) => state.form.errors.push(err)));
+    .catch((err) => {
+      form.errors = err.message;
+    }));
 
   Promise.allSettled(promises).finally(() => setTimeout(() => addNewPosts(state), 5000));
 };
@@ -131,6 +134,7 @@ export default () => {
         state.posts.push(...newPosts);
       })
       .catch((err) => {
+        console.log(err)
         state.form.formStatus = 'error';
         state.form.errors = err.message;
       });
