@@ -134,7 +134,6 @@ export default () => {
         state.posts.push(...newPosts);
       })
       .catch((err) => {
-        console.log(err)
         state.form.formStatus = 'error';
         state.form.errors = err.message;
       });
