@@ -1,14 +1,14 @@
-# RSS agregator
+<h1 align="center">RSS agregator</h1>
 
 <div align="center">
   <a href="https://codeclimate.com/github/AlexeyChi/frontend-project-11/maintainability"><img src="https://api.codeclimate.com/v1/badges/dc714029c2f9addd5ec9/maintainability" /></a>
+  <a href="https://github.com/AlexeyChi/frontend-project-11/actions/workflows/nodeCI.yml"><img src="https://github.com/AlexeyChi/frontend-project-11/actions/workflows/nodeCI.yml/badge.svg">
+  <a href="https://github.com/AlexeyChi/frontend-project-11/actions/workflows/hexlet-check.yml"><src img="https://github.com/AlexeyChi/frontend-project-11/actions/workflows/hexlet-check.yml/badge.svg">
 </div>
-
-[![Actions Status](https://github.com/AlexeyChi/frontend-project-11/actions/workflows/hexlet-check.yml/badge.svg)(https://github.com/AlexeyChi/frontend-project-11/actions)] [![Maintainability](https://api.codeclimate.com/v1/badges/dc714029c2f9addd5ec9/maintainability)](https://codeclimate.com/github/AlexeyChi/frontend-project-11/maintainability) [![Node CI](https://github.com/AlexeyChi/frontend-project-11/actions/workflows/nodeCI.yml/badge.svg)](https://github.com/AlexeyChi/frontend-project-11/actions/workflows/nodeCI.yml)
 
 ### Preview:
 
-<https://github.com/AlexeyChi/project-preview-/blob/main/rssAgregator.gif>
+![](https://github.com/AlexeyChi/project-preview-/blob/main/rssAgregator.gif)
 
 ### Tap the link and try it: <https://frontend-project-11-nu-five.vercel.app>
 
